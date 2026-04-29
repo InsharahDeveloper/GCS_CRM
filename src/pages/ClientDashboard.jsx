@@ -1,7 +1,6 @@
 import { useState } from "react";
 import ClientForm from "../component/AddClient";
 import ModifyClient from "../component/ModifyClient";
-import ShowData from "../component/ShowData";
 
 function ClientDashboard() {
   const [tab, setTab] = useState("add");
@@ -22,17 +21,10 @@ function ClientDashboard() {
 >
   Modify Client
 </button>
-        <button
-  onClick={() => setTab("show")}
-  className={`tabBtn ${tab === "show" ? "activeTab" : ""}`}
->
-  See Data
-</button>
       </div>
         <div className="bg-white sec min-h-[80vh]">
       {tab === "add" && <ClientForm />}
       {tab === "modify" && <ModifyClient />}
-      {tab === "show" && <ShowData />}
       </div>
 
       </div>

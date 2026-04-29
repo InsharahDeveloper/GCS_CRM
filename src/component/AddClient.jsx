@@ -9,8 +9,7 @@ function AddClient({ editModeProp = false, existingData = null }) {
   const [form, setForm] = useState({
     id: "",
     clientName: "",
-    businessName: "",
-    clientEmail: "",
+    campaign: "",
     clientWhatsapp: "",
     gvCountry: "",
     price: "",
@@ -44,7 +43,7 @@ function AddClient({ editModeProp = false, existingData = null }) {
     let uniqueId = editMode ? form.id : Date.now().toString();
 
     if (!form.clientName.trim()) return alert("Client Name required");
-    if (!form.clientEmail.includes("@")) return alert("Invalid Email");
+    if (!form.gvEmail.includes("@")) return alert("Invalid Email");
     if (isNaN(form.price) || form.price === "") return alert("Price must be number");
     if (!form.gvCountry) return alert("Select Country");
     if (!form.clientWhatsapp.trim()) return alert("Whatsapp required");
@@ -82,8 +81,7 @@ function AddClient({ editModeProp = false, existingData = null }) {
           setForm({
             id: "",
             clientName: "",
-            businessName: "",
-            clientEmail: "",
+            campaign: "",
             clientWhatsapp: "",
             gvCountry: "",
             price: "",
@@ -122,8 +120,7 @@ function AddClient({ editModeProp = false, existingData = null }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input name="clientName" value={form.clientName} onChange={handleChange} placeholder="Client Name" className="input" />
-            <input name="businessName" value={form.businessName} onChange={handleChange} placeholder="Business Name" className="input" />
-            <input name="clientEmail" value={form.clientEmail} onChange={handleChange} placeholder="Email" className="input" />
+            <input name="campaign" value={form.campaign} onChange={handleChange} placeholder="Campaign Name" className="input" />
             <input name="clientWhatsapp" value={form.clientWhatsapp} onChange={handleChange} placeholder="WhatsApp" className="input" />
 
             <select name="gvCountry" value={form.gvCountry} onChange={handleChange} className="input">
@@ -131,7 +128,7 @@ function AddClient({ editModeProp = false, existingData = null }) {
               {countries.map(c => <option key={c}>{c}</option>)}
             </select>
 
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden   md:col-span-2">
               <input
                 type="number"
                 name="price"
@@ -153,13 +150,16 @@ function AddClient({ editModeProp = false, existingData = null }) {
             </div>
             <input name="gvEmail" value={form.gvEmail} onChange={handleChange} placeholder="GV Email" className="input" />
             <input type="password" name="gvPassword" value={form.gvPassword} onChange={handleChange} placeholder="Password" className="input" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          
+  <div className="">
+            <label className="text-gray-500" htmlFor="">Purchase Date</label>
             <input type="date" name="purchaseDate" value={form.purchaseDate} onChange={handleChange} className="input" />
+            </div>
+            <div className="">
+            <label className="text-gray-500" htmlFor="">Renewal Date</label>
             <input type="date" name="renewalDate" value={form.renewalDate} onChange={handleChange} className="input" />
-          </div>
-
+            </div>
+</div>
           <textarea name="notes" value={form.notes} onChange={handleChange} className="input" placeholder="Notes"></textarea>
 
           <button className="btn w-full">
