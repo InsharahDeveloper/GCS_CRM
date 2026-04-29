@@ -1,7 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function AddClient() {
+
+function AddClient({ editModeProp = false, existingData = null }) {
+
+  const [editMode, setEditMode] = useState(editModeProp);
+  const [success, setSuccess] = useState(false);
+
   const [form, setForm] = useState({
+    id: "",
     clientName: "",
     businessName: "",
     clientEmail: "",
@@ -19,285 +25,152 @@ export default function AddClient() {
 
   const [loading, setLoading] = useState(false);
 
-  const countries = [
-    "USA",
-    "UK",
-    "CANADA",
-    "Australia",
-    "Italy",
-    "Germany",
-    "Ireland",
-    "Europe",
-    "Spain",
-    "Belgium",
-    "Switzerland",
-    "Denmark",
-    "France",
-    "Netherlands",
-    "Sweden",
-    "Custom",
-  ];
+  const countries = ["USA", "UK", "CANADA", "Australia", "Italy", "Germany", "Ireland", "Europe", "Spain", "Belgium", "Switzerland", "Denmark", "France", "Netherlands", "Sweden", "Custom"];
+
+  useEffect(() => {
+    if (existingData) {
+      setForm(existingData);
+      setEditMode(true);
+    }
+  }, [existingData]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // ✅ Format price properly
-  const formattedForm = {
-    ...form,
-    price:
-      form.currency === "$"
-        ? `${form.price}$`
-        : `${form.price}pkr`,
-  };
+    let uniqueId = editMode ? form.id : Date.now().toString();
 
-  // ✅ Make all values safe (no undefined/null)
-  const safeForm = Object.fromEntries(
-    Object.entries(formattedForm).map(([k, v]) => [k, v || ""])
-  );
+    if (!form.clientName.trim()) return alert("Client Name required");
+    if (!form.clientEmail.includes("@")) return alert("Invalid Email");
+    if (isNaN(form.price) || form.price === "") return alert("Price must be number");
+    if (!form.gvCountry) return alert("Select Country");
+    if (!form.clientWhatsapp.trim()) return alert("Whatsapp required");
 
-  console.log("Sending Data:", safeForm); // 🔍 Debug
+    setLoading(true);
 
-  try {
-    const response = await fetch(
-      "https://sheetdb.io/api/v1/cf5t8gxeeodoz",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data: [safeForm], // ✅ MUST be array
-        }),
-      }
+    const formattedForm = {
+      ...form,
+      id: uniqueId,
+      price: form.currency === "$" ? `${form.price}$` : `${form.price}pkr`,
+    };
+
+    const safeForm = Object.fromEntries(
+      Object.entries(formattedForm).map(([k, v]) => [k, v || ""])
     );
 
-    const result = await response.json();
+    try {
+      const url = editMode
+        ? `https://sheetdb.io/api/v1/cf5t8gxeeodoz/gvEmail/${form.gvEmail}`
+        : "https://sheetdb.io/api/v1/cf5t8gxeeodoz";
 
-    if (response.ok) {
-      alert("Client Saved Successfully! 🚀");
+      const method = editMode ? "PUT" : "POST";
 
-      setForm({
-        clientName: "",
-        businessName: "",
-        clientEmail: "",
-        clientWhatsapp: "",
-        gvCountry: "",
-        price: "",
-        currency: "$",
-        gvEmail: "",
-        gvPassword: "",
-        purchaseDate: "",
-        renewalDate: "",
-        status: "Active",
-        notes: "",
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: [safeForm] }),
       });
-    } else {
-      console.log("SheetDB Error:", result);
-      alert(result?.error || "SheetDB Error");
-    }
-  } catch (error) {
-    console.log("Network Error:", error);
-    alert("Network Error");
-  }
 
-  setLoading(false);
-};
+      if (res.ok) {
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 2000);
+
+        if (!editMode) {
+          setForm({
+            id: "",
+            clientName: "",
+            businessName: "",
+            clientEmail: "",
+            clientWhatsapp: "",
+            gvCountry: "",
+            price: "",
+            currency: "$",
+            gvEmail: "",
+            gvPassword: "",
+            purchaseDate: "",
+            renewalDate: "",
+            status: "Active",
+            notes: "",
+          });
+        }
+      } else {
+        alert("Error saving data");
+      }
+
+    } catch {
+      alert("Network Error");
+    }
+
+    setLoading(false);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center p-4">
+    <div className="flex justify-center overflow-hidden sec">
+{success && (
+  <div className="fixed py-10 lg:px-8 text-center bg-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[fit-centent] h-[fit-content] lg:text-2xl flex items-center justify-center p-3 rounded-xl shadow-2xl border border-orange-400">
+    Client Saved Successfully ✅
+  </div>
+)}
+      <div className="w-full max-w-5xl sec bg-white p-6 shadow">
 
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-6 md:p-8">
+        <h1 className="text-2xl mb-4">{editMode ? "Edit Client" : "Add Client"}</h1>
 
-        <h1 className="text-3xl font-bold mb-6">📋 Add New Client</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-
-          {/* GRID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <input name="clientName" value={form.clientName} onChange={handleChange} placeholder="Client Name" className="input" />
+            <input name="businessName" value={form.businessName} onChange={handleChange} placeholder="Business Name" className="input" />
+            <input name="clientEmail" value={form.clientEmail} onChange={handleChange} placeholder="Email" className="input" />
+            <input name="clientWhatsapp" value={form.clientWhatsapp} onChange={handleChange} placeholder="WhatsApp" className="input" />
 
-            <input
-              required
-              name="clientName"
-              value={form.clientName}
-              onChange={handleChange}
-              placeholder="Client Name"
-              className="input"
-            />
-
-            <input
-              name="businessName"
-              value={form.businessName}
-              onChange={handleChange}
-              placeholder="Business Name"
-              className="input"
-            />
-
-            <input
-              required
-              name="clientEmail"
-              value={form.clientEmail}
-              onChange={handleChange}
-              placeholder="Client Email"
-              className="input"
-            />
-
-            {/* WHATSAPP */}
-            <input
-              name="clientWhatsapp"
-              value={form.clientWhatsapp}
-              onChange={(e) => {
-                let value = e.target.value.replace(/[^0-9]/g, "");
-                if (value.length <= 15) {
-                  setForm((prev) => ({
-                    ...prev,
-                    clientWhatsapp: value,
-                  }));
-                }
-              }}
-              placeholder="WhatsApp Number"
-              className="input"
-            />
-
-            {/* GV COUNTRY */}
-            <select
-              required
-              name="gvCountry"
-              value={form.gvCountry}
-              onChange={handleChange}
-              className="input"
-            >
-              <option value="">Select GV Country</option>
-              {countries.map((c, i) => (
-                <option key={i} value={c}>
-                  {c}
-                </option>
-              ))}
+            <select name="gvCountry" value={form.gvCountry} onChange={handleChange} className="input">
+              <option value="">Select Country</option>
+              {countries.map(c => <option key={c}>{c}</option>)}
             </select>
 
-            {/* PRICE */}
-            <div className="w-full">
-              <div className="flex items-stretch border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+              <input
+                type="number"
+                name="price"
+                value={form.price}
+                onChange={handleChange}
+                placeholder="Enter price"
+                className="w-full px-3 py-2 outline-none"
+              />
 
-                <input
-                  required
-                  name="price"
-                  value={form.price}
-                  onChange={handleChange}
-                  placeholder="Enter price"
-                  className="w-full px-3 py-3 outline-none border-none"
-                />
-
-                <select
-                  name="currency"
-                  value={form.currency}
-                  onChange={handleChange}
-                  className="bg-gray-100 px-3 text-sm outline-none border-l border-gray-300"
-                >
-                  <option value="$">USD $</option>
-                  <option value="pkr">PKR</option>
-                </select>
-
-              </div>
+              <select
+                name="currency"
+                value={form.currency}
+                onChange={handleChange}
+                className="bg-gray-100 px-3 border-l"
+              >
+                <option value="$">USD $</option>
+                <option value="pkr">PKR</option>
+              </select>
             </div>
-
-            <input
-              required
-              name="gvEmail"
-              value={form.gvEmail}
-              onChange={handleChange}
-              placeholder="GV Email ID"
-              className="input"
-            />
-
-            <input
-              required
-              type="password"
-              name="gvPassword"
-              value={form.gvPassword}
-              onChange={handleChange}
-              placeholder="GV Password"
-              className="input"
-            />
-
+            <input name="gvEmail" value={form.gvEmail} onChange={handleChange} placeholder="GV Email" className="input" />
+            <input type="password" name="gvPassword" value={form.gvPassword} onChange={handleChange} placeholder="Password" className="input" />
           </div>
 
-          {/* DATES */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-            <input
-              required
-              type="date"
-              name="purchaseDate"
-              value={form.purchaseDate}
-              onChange={handleChange}
-              className="input"
-            />
-
-            <input
-              required
-              type="date"
-              name="renewalDate"
-              value={form.renewalDate}
-              onChange={handleChange}
-              className="input"
-            />
-
+          <div className="grid grid-cols-2 gap-4">
+            <input type="date" name="purchaseDate" value={form.purchaseDate} onChange={handleChange} className="input" />
+            <input type="date" name="renewalDate" value={form.renewalDate} onChange={handleChange} className="input" />
           </div>
 
-          {/* STATUS */}
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            className="input"
-          >
-            <option>Active</option>
-            <option>Expired</option>
-            <option>Pending</option>
-          </select>
+          <textarea name="notes" value={form.notes} onChange={handleChange} className="input" placeholder="Notes"></textarea>
 
-          {/* NOTES */}
-          <textarea
-            name="notes"
-            value={form.notes}
-            onChange={handleChange}
-            placeholder="Notes..."
-            rows="4"
-            className="input"
-          />
-
-          {/* BUTTON */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 rounded-xl font-semibold"
-          >
-            {loading ? "Saving..." : "Save Client"}
+          <button className="btn w-full">
+            {loading ? "Saving..." : editMode ? "Update Client" : "Save Client"}
           </button>
 
         </form>
       </div>
-
-      {/* STYLE */}
-      <style>{`
-        .input {
-          width: 100%;
-          padding: 12px;
-          border: 1px solid #d1d5db;
-          border-radius: 10px;
-          outline: none;
-        }
-        .input:focus {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 2px #3b82f6;
-        }
-      `}</style>
-
     </div>
   );
 }
+
+
+export default AddClient

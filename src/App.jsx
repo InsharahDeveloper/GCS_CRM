@@ -1,10 +1,10 @@
 import { useState } from "react";
 import "./App.css";
-import AddClient from "./component/AddClient";
+import ClientDashboard from "./pages/ClientDashboard";
 
 function App() {
   return <> 
-  <AddClient />
+  <ClientDashboard />
   </>
 
 }
