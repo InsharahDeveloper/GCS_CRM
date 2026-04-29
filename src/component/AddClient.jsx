@@ -114,7 +114,7 @@ function AddClient({ editModeProp = false, existingData = null }) {
     Client Saved Successfully ✅
   </div>
 )}
-      <div className="w-full max-w-5xl sec bg-white p-6 shadow">
+      <div className="w-full max-w-5xl sec bg-white p-6">
 
         <h1 className="text-2xl mb-4">{editMode ? "Edit Client" : "Add Client"}</h1>
 
